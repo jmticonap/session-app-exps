@@ -5,7 +5,8 @@
   "scripts": {
     "test": "jest",
     "compile": "tsc",
-    "dev": "ts-node src/app.ts"
+    "dev": "NODE_ENV=live ts-node src/app.ts",
+    "dev:test": "NODE_ENV=test ts-node src/app.ts"
   },
   "keywords": [],
   "author": "",
@@ -27,7 +28,7 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "express": "^4.19.2",
+    "dotenv": "^16.4.5",
     "mysql2": "^3.9.7",
     "reflect-metadata": "^0.2.2",
     "tsyringe": "^4.8.0",
