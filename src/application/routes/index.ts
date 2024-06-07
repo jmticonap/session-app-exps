@@ -9,6 +9,8 @@ export const routes: Route[] = [
     {
         method: 'GET',
         path: '/user/greeting',
-        handler: handler(userController.greeting),
+        handler: handler(userController.greeting).use(async (): Promise<void> => {
+            console.log('Hello fron midlewawre');
+        }),
     },
 ];

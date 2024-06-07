@@ -47,7 +47,6 @@ export default class HttpServer {
                 });
                 req.on('end', async () => await this.execute(req, res, body));
             } else {
-                console.info('WITHOUT BODY');
                 await this.execute(req, res);
             }
         });

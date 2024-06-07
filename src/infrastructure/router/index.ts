@@ -2,7 +2,6 @@ import { container } from 'tsyringe';
 import { HTTP_STATUS } from '../../domain/constants';
 import { SessionError } from '../../domain/errors';
 import { HttpRequest, HttpResponse, Route } from '../../domain/types/route';
-import { isPromise } from 'node:util/types';
 import ConsoleLogger from '../logger/console.logger';
 
 type MatchType = {
