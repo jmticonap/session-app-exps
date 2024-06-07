@@ -18,8 +18,7 @@ export default class UserController {
         @inject(MysqlUserRepository) private _userRepository: UserRepository,
     ) {}
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async greeting(req: HttpRequest, ctx: Record<string, any>): Promise<HttpResponse> {
+    async greeting(req: HttpRequest): Promise<HttpResponse> {
         const method = 'greeting';
         try {
             return {

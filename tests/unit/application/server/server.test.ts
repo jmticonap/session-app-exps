@@ -4,6 +4,7 @@ import HttpServer from '../../../../src/application/server';
 import { HttpRequest, HttpResponse } from '../../../../src/domain/types/route';
 import ConsoleLogger from '../../../../src/infrastructure/logger/console.logger';
 import EnvConfigurationRepository from '../../../../src/infrastructure/repository/env-configuration.repository';
+import { handler } from '../../../../src/infrastructure/router';
 
 jest.mock('http');
 jest.mock('../../../../src/infrastructure/logger/console.logger');
@@ -94,7 +95,7 @@ describe('HttpServer', () => {
                 {
                     method: 'GET',
                     path: '/user/greeting',
-                    handler: async (req: HttpRequest): Promise<HttpResponse> => {
+                    handler: handler(async (req: HttpRequest): Promise<HttpResponse> => {
                         try {
                             return {
                                 statusCode: 200,
@@ -103,7 +104,7 @@ describe('HttpServer', () => {
                         } catch (error) {
                             throw error;
                         }
-                    },
+                    }),
                 },
             ])
             .upServer();

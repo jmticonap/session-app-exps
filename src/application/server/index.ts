@@ -5,9 +5,9 @@ import Logger from '../../domain/logger';
 import EnvConfigurationRepository from '../../infrastructure/repository/env-configuration.repository';
 import ConfigurationRepository from '../../domain/repository/configuration.repository';
 import { HttpMethod, Route } from '../../domain/types/route';
-import Router from '../routes/router';
 import { HTTP_STATUS } from '../../domain/constants';
 import { SessionError } from '../../domain/errors';
+import Router from '../../infrastructure/router';
 
 @singleton()
 export default class HttpServer {
@@ -57,6 +57,12 @@ export default class HttpServer {
         });
 
         return this;
+    }
+
+    downServer() {
+        this.server?.close((err) => {
+            if (err) console.error(err);
+        });
     }
 
     private async execute(

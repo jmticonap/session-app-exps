@@ -1,24 +1,24 @@
-import { Handler } from '../../domain/types/route';
+import { HandlerManager } from '.';
 
 export default class HandlerRoute<T> {
-    private _middlewares: Array<Handler | HandlerRoute<T>> = [];
-    private _handler: Handler | undefined;
+    private _middlewares: Array<HandlerManager | HandlerRoute<T>> = [];
+    private _handler: HandlerManager | undefined;
 
-    constructor(handler?: Handler) {
+    constructor(handler?: HandlerManager) {
         if (handler) this._handler = handler;
     }
 
-    use(handler: Handler | HandlerRoute<T>) {
+    use(handler: HandlerManager | HandlerRoute<T>) {
         this._middlewares.push(handler);
 
         return this;
     }
 
-    handler(handler: Handler) {
+    handler(handler: HandlerManager) {
         this._handler = handler;
     }
 
-    getHandlers(): { handler: Handler; middlewares: Array<Handler | HandlerRoute<T>> } {
+    getHandlers(): { handler: HandlerManager; middlewares: Array<HandlerManager | HandlerRoute<T>> } {
         try {
             if (!this._handler) throw new Error('Handlder must be present');
 

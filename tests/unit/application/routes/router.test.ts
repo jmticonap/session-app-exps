@@ -1,6 +1,6 @@
 import 'reflect-metadata';
-import Router from '../../../../src/application/routes/router';
 import { HttpRequest, HttpResponse, Route } from '../../../../src/domain/types/route';
+import Router, { handler } from '../../../../src/infrastructure/router';
 
 describe('Router test suite', () => {
     const handlerTest = async (): Promise<HttpResponse> => {
@@ -17,7 +17,7 @@ describe('Router test suite', () => {
         {
             method: 'GET',
             path: '/test/endpoint',
-            handler: handlerTest,
+            handler: handler(handlerTest),
         },
     ];
     let sut: Router;
@@ -129,7 +129,7 @@ describe('Router test suite', () => {
                 {
                     method: 'GET',
                     path: '/test/{param}/endpoint',
-                    handler: handlerTest,
+                    handler: handler(handlerTest),
                 },
             ]);
             await sut.execRequest(req);

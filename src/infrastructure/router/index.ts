@@ -3,11 +3,36 @@ import { HTTP_STATUS } from '../../domain/constants';
 import { SessionError } from '../../domain/errors';
 import { HttpRequest, HttpResponse, Route } from '../../domain/types/route';
 import { isPromise } from 'node:util/types';
-import ConsoleLogger from '../../infrastructure/logger/console.logger';
+import ConsoleLogger from '../logger/console.logger';
 
 type MatchType = {
     match: boolean;
     [key: string]: string | boolean;
+};
+
+export class HandlerManager<Request extends HttpRequest = HttpRequest, Response extends HttpResponse = HttpResponse> {
+    middleware: Array<(req: Request, ctx: Record<string, any>) => Promise<Response | void>> = [];
+    executable?: (req: Request, ctx: Record<string, any>) => Promise<Response>;
+
+    constructor(handler: (req: Request, ctx: Record<string, any>) => Promise<Response>) {
+        this.executable = handler;
+    }
+
+    use(handler: (req: Request, ctx: Record<string, any>) => Promise<Response | void>): this {
+        this.middleware.push(handler);
+
+        return this;
+    }
+
+    handler(handler: (req: Request, ctx: Record<string, any>) => Promise<Response>): void {
+        this.executable = handler;
+    }
+}
+
+export const handler = <Request extends HttpRequest = HttpRequest, Response extends HttpResponse = HttpResponse>(
+    handler: (req: Request, ctx: Record<string, any>) => Promise<Response>,
+) => {
+    return new HandlerManager(handler);
 };
 
 export default class Router<Request extends HttpRequest = HttpRequest, Response extends HttpResponse = HttpResponse> {
@@ -24,7 +49,7 @@ export default class Router<Request extends HttpRequest = HttpRequest, Response 
         return this;
     }
 
-    async execRequest(req: Request) {
+    async execRequest(req: Request): Promise<HttpResponse> {
         if (!req.url) throw new Error("Url can't be undefined, null or empty");
         const method = req.method;
         let matchRoute: Route<Request, Response> | undefined;
@@ -60,11 +85,14 @@ export default class Router<Request extends HttpRequest = HttpRequest, Response 
 
             this.loadPathParameters(req, matchParams);
 
-            if (isPromise(matchRoute.handler)) {
-                return await matchRoute.handler(req, { ...matchParams });
-            } else {
-                return matchRoute.handler(req, { ...matchParams });
+            for (const mdlw of matchRoute.handler.middleware) {
+                const mdlwResult = await mdlw(req, { ...matchParams });
+                if (mdlwResult) {
+                    return mdlwResult as HttpResponse;
+                }
             }
+
+            return await matchRoute.handler.executable!(req, { ...matchParams });
         } catch (error) {
             if (error instanceof SessionError) {
                 return error.errorResponse();

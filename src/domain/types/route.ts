@@ -1,4 +1,5 @@
 import { IncomingHttpHeaders, OutgoingHttpHeader } from 'node:http';
+import { HandlerManager } from '../../infrastructure/router';
 
 export type HttpMethod = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'DELETE' | 'CONNECT' | 'OPTIONS' | 'TRACE' | 'PATCH';
 
@@ -18,13 +19,8 @@ export type HttpResponse<T = any> = HttpBaseMessage<T> & {
     headers?: OutgoingHttpHeader;
 };
 
-export type Handler<Request extends HttpRequest = HttpRequest, Response extends HttpResponse = HttpResponse> = (
-    req: Request,
-    ctx: Record<string, any>,
-) => Promise<Response>;
-
 export type Route<Request extends HttpRequest = HttpRequest, Response extends HttpResponse = HttpResponse> = {
     method: HttpMethod;
     path: string;
-    handler: Handler<Request, Response>;
+    handler: HandlerManager<Request, Response>;
 };
