@@ -48,6 +48,12 @@ export default class Router<Request extends HttpRequest = HttpRequest, Response 
         return this;
     }
 
+    routeList(): void {
+        for (const route of this._routes) {
+            console.log(`[${route.method}]`, '\t', route.path);
+        }
+    }
+
     async execRequest(req: Request): Promise<HttpResponse> {
         if (!req.url) throw new Error("Url can't be undefined, null or empty");
         const method = req.method;

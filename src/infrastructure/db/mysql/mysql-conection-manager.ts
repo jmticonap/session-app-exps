@@ -24,6 +24,8 @@ export default class MysqlConectionManager implements ConectionManager {
     ) {
         const cnf = this._config.get();
         this.cnf = cnf.mysql[cnf.nodeEnv];
+
+        this._logger.info({ className, message: 'MysqlConectionManager created successfully', object: this.cnf });
     }
 
     async getConnection(config?: ConnectionOptions): Promise<Connection> {

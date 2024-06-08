@@ -11,7 +11,7 @@ interface ConnectionMysql extends RowDataPacket {
     backendid: number;
 }
 
-const className = 'MysqlConectionManager';
+const className = 'MysqlPoolConectionManager';
 
 @singleton()
 export default class MysqlPoolConectionManager implements ConectionManager {

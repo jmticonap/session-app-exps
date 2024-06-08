@@ -1,9 +1,12 @@
 import { inject, singleton } from 'tsyringe';
+import dotenv from 'dotenv';
 import { env } from 'node:process';
 import { Configuration, NodeEnvType } from '../../domain/types';
 import ConfigurationRepository from '../../domain/repository/configuration.repository';
 import Logger from '../../domain/logger';
 import ConsoleLogger from '../logger/console.logger';
+
+dotenv.config({ path: './.env' });
 
 const className = 'EnvConfigurationRepository';
 

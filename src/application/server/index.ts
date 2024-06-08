@@ -1,5 +1,5 @@
 import http from 'node:http';
-import { inject, singleton } from 'tsyringe';
+import { inject, injectable } from 'tsyringe';
 import ConsoleLogger from '../../infrastructure/logger/console.logger';
 import Logger from '../../domain/logger';
 import EnvConfigurationRepository from '../../infrastructure/repository/env-configuration.repository';
@@ -9,7 +9,7 @@ import { HTTP_STATUS } from '../../domain/constants';
 import { SessionError } from '../../domain/errors';
 import Router from '../../infrastructure/router';
 
-@singleton()
+@injectable()
 export default class HttpServer {
     private server: http.Server | undefined;
     private host: string;
@@ -53,6 +53,7 @@ export default class HttpServer {
 
         this.server.listen(this.port, this.host, () => {
             console.log(`Server running at http://${this.host}:${this.port}/`);
+            this._router?.routeList();
         });
 
         return this;
