@@ -1,66 +1,75 @@
+import { singleton } from 'tsyringe';
 import Logger from '../../domain/logger';
 import { LoggerAttributeType } from '../../domain/types';
 
+@singleton()
 export default class ConsoleLogger implements Logger {
     info({ className, method, execTime, message, object }: LoggerAttributeType): void {
         const d = new Date();
         try {
-            console.info(
-                `[${d.toISOString()}]:\n`,
+            console.log(`[${d.toISOString()}]:`);
+            console.dir(
                 this.takeOffUndefinedProperties({
                     level: 'INFO',
                     className,
                     method,
                     execTime,
                     message,
-                    object: JSON.stringify(object),
+                    object,
                 }),
+                { depth: null, colors: true },
             );
         } catch (error) {
             console.error(error);
         }
     }
+
     debug({ className, method, execTime, message, object }: LoggerAttributeType): void {
         const d = new Date();
-        console.debug(
-            `[${d.toISOString()}]:\n`,
+        console.log(`[${d.toISOString()}]:`);
+        console.dir(
             this.takeOffUndefinedProperties({
                 level: 'DEBUG',
                 className,
                 method,
                 execTime,
                 message,
-                object: JSON.stringify(object),
+                object,
             }),
+            { depth: null, colors: true },
         );
     }
+
     warn({ className, method, execTime, message, object }: LoggerAttributeType): void {
         const d = new Date();
-        console.warn(
-            `[${d.toISOString()}]:\n`,
+        console.log(`[${d.toISOString()}]:`);
+        console.dir(
             this.takeOffUndefinedProperties({
                 level: 'WARN',
                 className,
                 method,
                 execTime,
                 message,
-                object: JSON.stringify(object),
+                object,
             }),
+            { depth: null, colors: true },
         );
     }
+
     error({ className, method, execTime, message, object, error }: LoggerAttributeType): void {
         const d = new Date();
-        console.error(
-            `[${d.toISOString()}]:\n`,
+        console.log(`[${d.toISOString()}]:`);
+        console.dir(
             this.takeOffUndefinedProperties({
                 level: 'ERROR',
                 className,
                 method,
                 execTime,
                 message,
-                object: JSON.stringify(object),
+                object: JSON.stringify(object, null, 2),
                 error,
             }),
+            { depth: null, colors: true },
         );
     }
 
