@@ -1,7 +1,7 @@
 import { container } from 'tsyringe';
 import { HTTP_STATUS } from '../../domain/constants';
 import { SessionError } from '../../domain/errors';
-import { HttpRequest, HttpResponse, Route } from '../../domain/types/route';
+import { HttpMethod, HttpRequest, HttpResponse } from '../../domain/types/route';
 import ConsoleLogger from '../logger/console.logger';
 
 type MatchType = {
@@ -9,75 +9,105 @@ type MatchType = {
     [key: string]: string | boolean;
 };
 
-export class HandlerManager<Request extends HttpRequest = HttpRequest, Response extends HttpResponse = HttpResponse> {
-    middleware: Array<(req: Request, ctx: Record<string, any>) => Promise<Response | void>> = [];
-    executable?: (req: Request, ctx: Record<string, any>) => Promise<Response>;
+export type HandlerType = (...args: any[]) => Promise<any>;
+export type RouteType = {
+    method: HttpMethod;
+    path: string;
+    midlewares?: Array<HandlerType>;
+    handler: HandlerType;
+};
 
-    constructor(handler: (req: Request, ctx: Record<string, any>) => Promise<Response>) {
-        this.executable = handler;
-    }
+export class RoutesController<Controller> {
+    public routes: Array<RouteType> = [];
+    method: any;
+    path: any;
+    constructor(private _controller: Controller) {}
 
-    use(handler: (req: Request, ctx: Record<string, any>) => Promise<Response | void>): this {
-        this.middleware.push(handler);
+    addRoute<F extends keyof Controller>({
+        method,
+        path,
+        handler,
+        midlewares,
+    }: {
+        method: HttpMethod;
+        path: string;
+        handler: F;
+        midlewares?: Array<HandlerType>;
+    }): this {
+        this.routes.push({
+            method,
+            path,
+            handler: async (...args: any[]) => {
+                return await new Promise(async (resolve, reject) => {
+                    try {
+                        if (midlewares) {
+                            for (const midleware of midlewares) {
+                                const result = await midleware(...args);
+                                if (result) return result;
+                            }
+                        }
+                        // eslint-disable-next-line @typescript-eslint/ban-types
+                        resolve(await (<Function>this._controller[handler]).bind(this._controller)(...args));
+                    } catch (error) {
+                        reject(error);
+                    }
+                });
+            },
+        });
 
         return this;
     }
-
-    handler(handler: (req: Request, ctx: Record<string, any>) => Promise<Response>): void {
-        this.executable = handler;
-    }
 }
 
-export const handler = <Request extends HttpRequest = HttpRequest, Response extends HttpResponse = HttpResponse>(
-    handler: (req: Request, ctx: Record<string, any>) => Promise<Response>,
-) => {
-    return new HandlerManager(handler);
-};
-
-export default class Router<Request extends HttpRequest = HttpRequest, Response extends HttpResponse = HttpResponse> {
-    private _routes: Array<Route<Request, Response>> = [];
+export default class Router<Request extends HttpRequest = HttpRequest> {
+    private _routes: Array<RoutesController<any>> = [];
     private _logger = container.resolve(ConsoleLogger);
 
-    constructor(routes?: Array<Route<Request, Response>>) {
+    constructor(routes?: Array<RoutesController<any>>) {
         if (routes) this._routes.push(...routes);
     }
 
-    pushRoutes(routes: Array<Route<Request, Response>>) {
+    pushRoutes(routes: Array<RoutesController<any>>) {
         this._routes.push(...routes);
 
         return this;
     }
 
     routeList(): void {
-        for (const route of this._routes) {
-            console.log(`[${route.method}]`, '\t', route.path);
+        const routes = this._routes.flatMap(({ routes }) => routes.map(({ path, method }) => ({ path, method })));
+        for (const { method, path } of routes) {
+            console.log(`[${method}]`, '\t', path);
         }
     }
 
     async execRequest(req: Request): Promise<HttpResponse> {
         if (!req.url) throw new Error("Url can't be undefined, null or empty");
         const method = req.method;
-        let matchRoute: Route<Request, Response> | undefined;
+        let matchRoute: RouteType | undefined;
         let matchParams: { [key: string]: string | boolean } | undefined;
 
-        for (const route of this._routes) {
-            if (method && route.method === method) {
-                const incomingPath = req.url;
-                const routePath = route.path;
+        for (const routeController of this._routes) {
+            for (const route of routeController.routes) {
+                const r = <RouteType>route;
 
-                let isMatch: MatchType | null;
-                if (incomingPath === '/' && (routePath === '' || routePath === '/')) {
-                    isMatch = { match: true };
-                } else {
-                    isMatch = this.match(routePath, incomingPath);
-                }
+                if (method && r.method === method) {
+                    const incomingPath = req.url;
+                    const routePath = r.path;
 
-                if (isMatch && isMatch.match) {
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    const { match, ...params } = isMatch;
-                    matchParams = params;
-                    matchRoute = route;
-                    break;
+                    let isMatch: MatchType | null;
+                    if (incomingPath === '/' && (routePath === '' || routePath === '/')) {
+                        isMatch = { match: true };
+                    } else {
+                        isMatch = this.match(routePath, incomingPath);
+                    }
+
+                    if (isMatch && isMatch.match) {
+                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                        const { match, ...params } = isMatch;
+                        matchParams = params;
+                        matchRoute = route;
+                        break;
+                    }
                 }
             }
         }
@@ -90,14 +120,7 @@ export default class Router<Request extends HttpRequest = HttpRequest, Response 
 
             this.loadPathParameters(req, matchParams);
 
-            for (const mdlw of matchRoute.handler.middleware) {
-                const mdlwResult = await mdlw(req, { ...matchParams });
-                if (mdlwResult) {
-                    return mdlwResult as HttpResponse;
-                }
-            }
-
-            return await matchRoute.handler.executable!(req, { ...matchParams });
+            return await matchRoute.handler(req, { ...matchParams });
         } catch (error) {
             if (error instanceof SessionError) {
                 return error.errorResponse();

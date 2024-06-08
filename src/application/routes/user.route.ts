@@ -1,31 +1,27 @@
 import { container } from 'tsyringe';
-import { Route } from '../../domain/types/route';
-import { handler } from '../../infrastructure/router';
 import UserController from '../controllers/user.controller';
+import { RoutesController } from '../../infrastructure/router';
 
 const userController = container.resolve(UserController);
 
-export const userRoutes: Route[] = [
-    {
+export const userRoutes = new RoutesController(userController)
+    .addRoute({
         method: 'GET',
         path: '/user/greeting',
-        handler: handler(userController.greeting.bind(userController)).use(async (): Promise<void> => {
-            console.log('Hello fron midlewawre');
-        }),
-    },
-    {
+        handler: 'greeting',
+    })
+    .addRoute({
         method: 'GET',
         path: '/user',
-        handler: handler(userController.findAll.bind(userController)),
-    },
-    {
+        handler: 'findAll',
+    })
+    .addRoute({
         method: 'GET',
         path: '/user/{id}',
-        handler: handler(userController.findById.bind(userController)),
-    },
-    {
+        handler: 'findById',
+    })
+    .addRoute({
         method: 'POST',
         path: '/user',
-        handler: handler(userController.newUser.bind(userController)),
-    },
-];
+        handler: 'newUser',
+    });
