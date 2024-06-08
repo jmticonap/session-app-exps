@@ -49,17 +49,17 @@ export default class UserController {
         }
     }
 
-    async findById(req: HttpRequest): Promise<HttpResponse> {
+    async findById(req: HttpRequest, ctx: Record<string, any>): Promise<HttpResponse> {
         const method = 'findById';
         try {
-            if (!req.pathParameters || !req.pathParameters['id']) throw new BadRequestError();
-            const [id] = req.pathParameters['id'];
+            if (!ctx || !ctx['id']) throw new BadRequestError();
+            const id = ctx['id'];
 
             this._logger.info({ className, method, object: { id }, message: 'QueryStringParams:' });
 
             return {
                 statusCode: HTTP_STATUS['OK'],
-                body: JSON.stringify(await this._userRepository.findById(+id)),
+                body: await this._userRepository.findById(+id),
             };
         } catch (error) {
             this._logger.error({ className, method, error: <Error>error });

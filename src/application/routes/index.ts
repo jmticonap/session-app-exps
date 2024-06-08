@@ -1,4 +1,4 @@
-import { Route } from '../../domain/types/route';
+import { RoutesController } from '../../infrastructure/router';
 import { userRoutes } from './user.route';
 
-export const routes: Route[] = [...userRoutes];
+export const routes: RoutesController<any>[] = [userRoutes];

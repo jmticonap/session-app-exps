@@ -4,7 +4,7 @@ import ConsoleLogger from '../../infrastructure/logger/console.logger';
 import Logger from '../../domain/logger';
 import EnvConfigurationRepository from '../../infrastructure/repository/env-configuration.repository';
 import ConfigurationRepository from '../../domain/repository/configuration.repository';
-import { HttpMethod, Route } from '../../domain/types/route';
+import { HttpMethod } from '../../domain/types/route';
 import { HTTP_STATUS } from '../../domain/constants';
 import { SessionError } from '../../domain/errors';
 import Router from '../../infrastructure/router';
@@ -27,7 +27,7 @@ export default class HttpServer {
         this.port = cnfServer.port;
     }
 
-    routes(routes: Array<Route>) {
+    routes(routes: Array<any>) {
         this._router = new Router(routes);
 
         return this;
