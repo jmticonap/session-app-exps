@@ -87,7 +87,7 @@ export default class UserController {
 
             return {
                 statusCode: HTTP_STATUS['OK'],
-                body: JSON.stringify(await this._userRepository.insert(user)),
+                body: await this._userRepository.insert(user),
             };
         } catch (error) {
             this._logger.error({ className, method, error: <Error>error });
