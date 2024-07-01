@@ -10,6 +10,7 @@ type MatchType = {
 };
 
 export type HandlerType = (...args: any[]) => Promise<any>;
+
 export type RouteType = {
     method: HttpMethod;
     path: string;

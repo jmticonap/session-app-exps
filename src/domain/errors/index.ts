@@ -1,10 +1,12 @@
 import { HTTP_STATUS } from '../constants';
+import { LogLevel } from '../types';
 import { HttpResponse } from '../types/route';
 
 export class SessionError extends Error {
     constructor(
         message: string,
         public statusCode: number = HTTP_STATUS['BAD_REQUEST'],
+        public level: LogLevel = 'WARN',
     ) {
         super(message);
     }

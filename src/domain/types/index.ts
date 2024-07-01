@@ -33,6 +33,8 @@ export type LoggerAttributeType = {
     error?: Error;
 };
 
+export type LogLevel = 'INFO' | 'WARN' | 'ERROR' | 'DEBUG';
+
 export type HttpStatusCodeKey =
     | 'CONTINUE'
     | 'SWITCHING_PROTOCOLS'

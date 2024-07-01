@@ -2,12 +2,13 @@ import { inject, singleton } from 'tsyringe';
 import MysqlUserRepository from '../../infrastructure/repository/mysql-user.repository';
 import UserRepository from '../../domain/repository/user.repository';
 import { UserRequestDtoSchema } from '../../domain/dto/user-request.dto';
-import UserEntity from '../../domain/entity/user.entity';
 import { HttpRequest, HttpResponse } from '../../domain/types/route';
 import ConsoleLogger from '../../infrastructure/logger/console.logger';
 import { HTTP_STATUS } from '../../domain/constants';
 import { BadRequestError, SchemaValidationError } from '../../domain/errors';
 import Logger from '../../domain/logger';
+import { validationSchemaBody } from '../../domain/decorators';
+import UserEntity from '../../domain/entity/user.entity';
 
 const className = 'UserController';
 
@@ -74,11 +75,12 @@ export default class UserController {
         }
     }
 
-    async newUser(req: HttpRequest): Promise<HttpResponse> {
+    @validationSchemaBody(UserRequestDtoSchema)
+    async newUser(req: HttpRequest<UserEntity>): Promise<HttpResponse> {
         const method = 'newUser';
         try {
             if (!req.body) throw new BadRequestError();
-            const user = <UserEntity>JSON.parse(req.body);
+            const user = req.body;
 
             const isvalid = UserRequestDtoSchema.safeParse(user);
             if (!isvalid.success) {

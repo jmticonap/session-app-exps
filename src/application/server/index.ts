@@ -34,22 +34,29 @@ export default class HttpServer {
     }
 
     upServer() {
-        this.server = http.createServer(async (req, res) => {
-            let body = '';
+        this.server = http.createServer(
+            async (
+                req: http.IncomingMessage,
+                res: http.ServerResponse<http.IncomingMessage> & {
+                    req: http.IncomingMessage;
+                },
+            ) => {
+                let body = '';
 
-            req.on('error', (err) => this.responseError(res, err));
+                req.on('error', (err) => this.responseError(res, err));
 
-            if (req.method && this._methodWithBody.includes(<HttpMethod>req.method)) {
-                console.info('WITH BODY');
-                req.on('data', (chunk: string) => {
-                    console.log('DATA:', chunk);
-                    body += chunk;
-                });
-                req.on('end', async () => await this.execute(req, res, body));
-            } else {
-                await this.execute(req, res);
-            }
-        });
+                if (req.method && this._methodWithBody.includes(<HttpMethod>req.method)) {
+                    console.info('WITH BODY');
+                    req.on('data', (chunk: string) => {
+                        console.log('DATA:', chunk);
+                        body += chunk;
+                    });
+                    req.on('end', async () => await this.execute(req, res, body));
+                } else {
+                    await this.execute(req, res);
+                }
+            },
+        );
 
         this.server.listen(this.port, this.host, () => {
             console.log(`Server running at http://${this.host}:${this.port}/`);
