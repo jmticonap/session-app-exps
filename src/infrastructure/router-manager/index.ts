@@ -138,7 +138,7 @@ export default class Router<Request extends HttpRequest = HttpRequest> {
         if (!req.pathParameters) this._logger.warn({ message: 'PathParameters is undefined' });
         if (req.pathParameters && params)
             for (const [key, value] of Object.entries(params)) {
-                req.pathParameters[key] = value;
+                req.pathParameters[key] = value as string;
             }
     }
 

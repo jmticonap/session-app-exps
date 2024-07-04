@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import Router, { RoutesController } from '../../../../src/infrastructure/router';
+import Router, { RoutesController } from '../../../../src/infrastructure/router-manager';
 import { TestController } from './test.controller';
 import { HttpRequest } from '../../../../src/domain/types/route';
 

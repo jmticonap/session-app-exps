@@ -1,14 +1,14 @@
 import { inject, singleton } from 'tsyringe';
+import { HttpRequest, HttpResponse } from '../../domain/types/route';
 import MysqlUserRepository from '../../infrastructure/repository/mysql-user.repository';
 import UserRepository from '../../domain/repository/user.repository';
+import UserEntity from '../../domain/entity/user.entity';
+import { validationSchemaBody } from '../../domain/decorators';
 import { UserRequestDtoSchema } from '../../domain/dto/user-request.dto';
-import { HttpRequest, HttpResponse } from '../../domain/types/route';
 import ConsoleLogger from '../../infrastructure/logger/console.logger';
 import { HTTP_STATUS } from '../../domain/constants';
 import { BadRequestError, SchemaValidationError } from '../../domain/errors';
 import Logger from '../../domain/logger';
-import { validationSchemaBody } from '../../domain/decorators';
-import UserEntity from '../../domain/entity/user.entity';
 
 const className = 'UserController';
 
@@ -56,11 +56,13 @@ export default class UserController {
             if (!ctx || !ctx['id']) throw new BadRequestError();
             const id = ctx['id'];
 
-            this._logger.info({ className, method, object: { id }, message: 'QueryStringParams:' });
+            const body = await this._userRepository.findById(+id);
+
+            this._logger.info({ className, method, object: body, message: 'QueryStringParams:' });
 
             return {
                 statusCode: HTTP_STATUS['OK'],
-                body: await this._userRepository.findById(+id),
+                body,
             };
         } catch (error) {
             this._logger.error({ className, method, error: <Error>error });
@@ -77,19 +79,16 @@ export default class UserController {
 
     @validationSchemaBody(UserRequestDtoSchema)
     async newUser(req: HttpRequest<UserEntity>): Promise<HttpResponse> {
+        console.log('newUser');
         const method = 'newUser';
         try {
             if (!req.body) throw new BadRequestError();
             const user = req.body;
-
-            const isvalid = UserRequestDtoSchema.safeParse(user);
-            if (!isvalid.success) {
-                throw new SchemaValidationError(JSON.stringify(isvalid.error.errors));
-            }
+            const result = await this._userRepository.insert(user);
 
             return {
                 statusCode: HTTP_STATUS['OK'],
-                body: await this._userRepository.insert(user),
+                body: result,
             };
         } catch (error) {
             this._logger.error({ className, method, error: <Error>error });

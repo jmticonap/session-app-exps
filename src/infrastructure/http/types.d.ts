@@ -1,8 +1,6 @@
 import { OutgoingHttpHeaders, IncomingHttpHeaders as InHeaders } from 'node:http';
 import { RequestOptions as ReqOptionsHttps } from 'node:https';
 
-export type HttpMethod = 'GET' | 'POST' | 'DELETE' | 'HEAD' | 'PUT' | 'CONNECT' | 'OPTIONS' | 'TRACE' | 'PATCH';
-
 export type ContentType =
     | 'text/plain'
     | 'text/html'
