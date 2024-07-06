@@ -8,6 +8,7 @@ import { MysqlConfiguration } from '../../../domain/types';
 import ConsoleLogger from '../../logger/console.logger';
 import { SessionError } from '../../../domain/errors';
 import { HTTP_STATUS } from '../../../domain/constants';
+import MysqlUnitOfWork from './mysql-unit-of-work';
 
 interface ConnectionMysql extends RowDataPacket {
     backendid: number;
@@ -16,14 +17,16 @@ interface ConnectionMysql extends RowDataPacket {
 const className = 'MysqlConectionManager';
 
 @scoped(Lifecycle.ResolutionScoped)
-export default class MysqlConectionManager implements ConectionManager {
+export default class MysqlConectionManager extends MysqlUnitOfWork implements ConectionManager {
     private cnf: MysqlConfiguration;
     private _connection: Connection | undefined;
 
     constructor(
-        @inject(ConsoleLogger) private _logger: Logger,
+        @inject(ConsoleLogger) _logger: Logger,
         @inject(EnvConfigurationRepository) private _config: ConfigurationRepository,
     ) {
+        super(className, _logger);
+
         const cnf = this._config.get();
         this.cnf = cnf.mysql[cnf.nodeEnv];
 

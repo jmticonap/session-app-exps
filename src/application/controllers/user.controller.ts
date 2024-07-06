@@ -9,6 +9,7 @@ import ConsoleLogger from '../../infrastructure/logger/console.logger';
 import { HTTP_STATUS } from '../../domain/constants';
 import { BadRequestError, SchemaValidationError } from '../../domain/errors';
 import Logger from '../../domain/logger';
+import MysqlUserService from '../services/mysql-user.service';
 
 const className = 'UserController';
 
@@ -17,6 +18,7 @@ export default class UserController {
     constructor(
         @inject(ConsoleLogger) private _logger: Logger,
         @inject(MysqlUserRepository) private _userRepository: UserRepository,
+        @inject(MysqlUserService) private _userService: MysqlUserService,
     ) {}
 
     async greeting(req: HttpRequest): Promise<HttpResponse> {
@@ -29,6 +31,25 @@ export default class UserController {
         } catch (error) {
             this._logger.info({ className, method, error: <Error>error });
             throw error;
+        }
+    }
+
+    async testTransaction(): Promise<HttpResponse> {
+        try {
+            return {
+                statusCode: HTTP_STATUS['OK'],
+                body: await this._userService.saveUserSaveTrasactionPointTest(),
+            };
+        } catch (error) {
+            this._logger.error({ className, method: 'testTransaction', error: <Error>error });
+            if (error instanceof BadRequestError || error instanceof SchemaValidationError) {
+                return error.errorResponse();
+            }
+
+            return {
+                statusCode: HTTP_STATUS['INTERNAL_SERVER_ERROR'],
+                body: error,
+            };
         }
     }
 

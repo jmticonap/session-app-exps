@@ -27,6 +27,10 @@ export default class MysqlExecutor {
         @inject(MysqlPoolConectionManager) private _poolManager: ConectionManager,
     ) {}
 
+    public setConectionManager(conectionManager: ConectionManager): void {
+        this._poolManager = conectionManager;
+    }
+
     async query<E extends BaseEntity, T extends E & RowDataPacket>({
         sql,
         params,

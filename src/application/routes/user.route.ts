@@ -12,6 +12,11 @@ export const userRoutes: Array<RouteType> = [
     },
     {
         method: 'GET',
+        path: '/user/test',
+        handler: userController.testTransaction.bind(userController),
+    },
+    {
+        method: 'GET',
         path: '/user',
         handler: userController.findAll.bind(userController),
     },

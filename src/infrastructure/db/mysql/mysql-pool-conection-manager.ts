@@ -6,6 +6,7 @@ import Logger from '../../../domain/logger';
 import ConfigurationRepository from '../../../domain/repository/configuration.repository';
 import { MysqlConfiguration } from '../../../domain/types';
 import ConsoleLogger from '../../logger/console.logger';
+import MysqlUnitOfWork from './mysql-unit-of-work';
 
 interface ConnectionMysql extends RowDataPacket {
     backendid: number;
@@ -14,14 +15,14 @@ interface ConnectionMysql extends RowDataPacket {
 const className = 'MysqlPoolConectionManager';
 
 @singleton()
-export default class MysqlPoolConectionManager implements ConectionManager {
+export default class MysqlPoolConectionManager extends MysqlUnitOfWork implements ConectionManager {
     private cnf: MysqlConfiguration;
-    private _poolConnection: PoolConnection | undefined;
 
     constructor(
-        @inject(ConsoleLogger) private _logger: Logger,
+        @inject(ConsoleLogger) _logger: Logger,
         @inject(EnvConfigurationRepository) private _config: ConfigurationRepository,
     ) {
+        super(className, _logger);
         const cnf = this._config.get();
         this.cnf = cnf.mysql[cnf.nodeEnv];
     }
@@ -29,7 +30,11 @@ export default class MysqlPoolConectionManager implements ConectionManager {
     async getConnection(config?: PoolOptions): Promise<PoolConnection> {
         const method = this.getConnection.name;
         try {
-            if (this._poolConnection) return this._poolConnection;
+            if (this._poolConnection) {
+                console.log('Return connection created before');
+                return this._poolConnection as PoolConnection;
+            }
+
             const cnnOpt: PoolOptions = {
                 host: this.cnf.host,
                 port: +this.cnf.port,
@@ -50,7 +55,7 @@ export default class MysqlPoolConectionManager implements ConectionManager {
                 message: `Connection with id ${rows[0].backendid} has been created.`,
             });
 
-            return this._poolConnection;
+            return this._poolConnection as PoolConnection;
         } catch (error) {
             this._logger.error({ className, method, message: 'Error open connection pool', error: <Error>error });
 
