@@ -43,9 +43,10 @@ export default class UserController {
             if (error instanceof BadRequestError || error instanceof SchemaValidationError) {
                 return error.errorResponse();
             }
+
             return {
                 statusCode: HTTP_STATUS['INTERNAL_SERVER_ERROR'],
-                body: { error },
+                body: error,
             };
         }
     }
