@@ -10,7 +10,8 @@ export type HttpRequest<T = any> = HttpBaseMessage<T> & {
     method: HttpMethod;
     url: string;
     headers?: IncomingHttpHeaders;
-    pathParameters?: Record<string, string>;
+    pathParams?: Record<string, string>;
+    searchParams?: URLSearchParams;
 };
 
 export type HttpResponse<T = any> = HttpBaseMessage<T> & {

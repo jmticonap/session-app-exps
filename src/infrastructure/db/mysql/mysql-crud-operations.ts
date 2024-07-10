@@ -2,7 +2,10 @@ import { RowDataPacket } from 'mysql2/promise';
 import MysqlExecutor from './mysql-executor';
 import CrudOperations from '../crud-operations';
 import BaseEntity from '../../../domain/entity/base.entity';
-import Logger from '../../../domain/logger';
+import Logger from '../../logger/logger';
+import { PaginationParams, ResponsePage } from '../../../domain/types';
+import { SessionError } from '../../../domain/errors';
+import { HTTP_STATUS } from '../../../domain/constants';
 
 export default abstract class MysqlCrudOperations<E extends BaseEntity, P extends E & RowDataPacket>
     implements CrudOperations<E, P>
@@ -14,14 +17,28 @@ export default abstract class MysqlCrudOperations<E extends BaseEntity, P extend
         protected tableName: string,
     ) {}
 
-    async findAll(): Promise<E[]> {
+    async findAll(pagParams: PaginationParams): Promise<ResponsePage<E>> {
         const method = this.findAll.name;
         try {
-            const sql = `SELECT * FROM ${this.tableName};`;
+            const init = (pagParams.page - 1) * pagParams.limit;
+            const limit = pagParams.limit;
+            if (init < 0 || limit < 1)
+                throw new SessionError('Parameters can not less than zero', HTTP_STATUS.BAD_REQUEST, 'WARN');
 
-            const result = await this._executor.query<E, P>({ sql, className: this.className, method });
+            const sql = `
+                SELECT COUNT(*) as count FROM ${this.tableName};
+                SELECT * FROM ${this.tableName} LIMIT ${init}, ${limit};
+            `;
 
-            return result;
+            const [[count], result] = await this._executor.queryMultiple({ sql, className: this.className, method });
+
+            return {
+                data: result as E[],
+                count: count.count,
+                pages: Math.ceil(count.count / limit),
+                limit,
+                current: pagParams.page,
+            };
         } catch (error) {
             this._logger.error({ className: this.className, method, error: <Error>error });
             throw error;

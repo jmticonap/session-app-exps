@@ -3,8 +3,8 @@ import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import MysqlPoolConectionManager from './mysql-pool-conection-manager';
 import ConectionManager from '../conection-manager';
 import BaseEntity from '../../../domain/entity/base.entity';
-import Logger from '../../../domain/logger';
-import ConsoleLogger from '../../logger/console.logger';
+import Logger from '../../logger/logger';
+import ConsoleLogger from '../../logger/console/console.logger';
 
 type QueryAttributes = {
     sql: string;
@@ -45,6 +45,22 @@ export default class MysqlExecutor {
             const [result] = await conn.query<T[]>(sql, params);
 
             return <E[]>(<unknown>result);
+        } catch (error) {
+            this._logger.error({ className, method, error: <Error>error });
+
+            throw error;
+        }
+    }
+
+    async queryMultiple({ sql, params, className, method }: QueryAttributes): Promise<RowDataPacket[][]> {
+        try {
+            const conn = await this._poolManager.getConnection();
+
+            this._logger.info({ className, method, object: { sql, params } });
+
+            const [result] = await conn.query<RowDataPacket[][]>(sql, params);
+
+            return result;
         } catch (error) {
             this._logger.error({ className, method, error: <Error>error });
 

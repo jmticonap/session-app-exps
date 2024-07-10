@@ -5,11 +5,12 @@ import UserRepository from '../../domain/repository/user.repository';
 import UserEntity from '../../domain/entity/user.entity';
 import { validationSchemaBody } from '../../domain/decorators';
 import { UserRequestDtoSchema } from '../../domain/dto/user-request.dto';
-import ConsoleLogger from '../../infrastructure/logger/console.logger';
+import ConsoleLogger from '../../infrastructure/logger/console/console.logger';
 import { HTTP_STATUS } from '../../domain/constants';
 import { BadRequestError, SchemaValidationError } from '../../domain/errors';
-import Logger from '../../domain/logger';
 import MysqlUserService from '../services/mysql-user.service';
+import Logger from '../../infrastructure/logger/logger';
+import { PaginationParams } from '../../domain/types';
 
 const className = 'UserController';
 
@@ -53,14 +54,20 @@ export default class UserController {
         }
     }
 
-    async findAll(): Promise<HttpResponse> {
+    async findAll(req: HttpRequest): Promise<HttpResponse> {
+        const method = this.findAll.name;
         try {
+            const pagParams: PaginationParams = {
+                page: +(req.searchParams?.get('page') || '1'),
+                limit: +(req.searchParams?.get('limit') || '10'),
+            };
+
             return {
                 statusCode: HTTP_STATUS['OK'],
-                body: await this._userRepository.findAll(),
+                body: await this._userRepository.findAll(pagParams),
             };
         } catch (error) {
-            this._logger.error({ className, method: 'findAll', error: <Error>error });
+            this._logger.error({ className, method, error: <Error>error });
             if (error instanceof BadRequestError || error instanceof SchemaValidationError) {
                 return error.errorResponse();
             }

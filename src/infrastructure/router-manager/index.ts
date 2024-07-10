@@ -2,7 +2,7 @@ import { container } from 'tsyringe';
 import { HTTP_STATUS } from '../../domain/constants';
 import { SessionError } from '../../domain/errors';
 import { HttpMethod, HttpRequest, HttpResponse } from '../../domain/types/route';
-import ConsoleLogger from '../logger/console.logger';
+import ConsoleLogger from '../logger/console/console.logger';
 
 type MatchType = {
     match: boolean;
@@ -135,10 +135,10 @@ export default class Router<Request extends HttpRequest = HttpRequest> {
     }
 
     loadPathParameters(req: Request, params: { [key: string]: string | boolean } | undefined): void {
-        if (!req.pathParameters) this._logger.warn({ message: 'PathParameters is undefined' });
-        if (req.pathParameters && params)
+        if (!req.pathParams) this._logger.warn({ message: 'PathParameters is undefined' });
+        if (req.pathParams && params)
             for (const [key, value] of Object.entries(params)) {
-                req.pathParameters[key] = value as string;
+                req.pathParams[key] = value as string;
             }
     }
 

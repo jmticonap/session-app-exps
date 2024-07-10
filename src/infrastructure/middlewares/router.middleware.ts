@@ -1,6 +1,7 @@
 import http from 'node:http';
-import { HttpMethod, HttpRequest } from '../../domain/types/route';
+import { HttpMethod, HttpRequest, HttpResponse } from '../../domain/types/route';
 import { isPromise } from 'node:util/types';
+import { HTTP_STATUS } from '../../domain/constants';
 
 export type HandlerIndex = (
     req: http.IncomingMessage,
@@ -39,12 +40,22 @@ const match = (routePath: string, incomingPath: string): MatchType | null => {
     return params;
 };
 
+const notFoundHandler = (headers?: http.OutgoingHttpHeader): HttpResponse => {
+    return {
+        headers,
+        statusCode: HTTP_STATUS.NOT_FOUND,
+        body: { error: 'Path not found' },
+    };
+};
+
 export const RouterMiddleware = (routes: Array<RouteType>) => {
     return async (req: http.IncomingMessage, body?: string) => {
         const { method } = req;
         for (const route of routes) {
             const url = new URL(req.url!, `http://${req.headers.host}`);
             if (method !== route.method) continue;
+
+            console.log('searchParams:', url.searchParams);
 
             const isMatch = match(route.path, url.pathname);
 
@@ -61,18 +72,21 @@ export const RouterMiddleware = (routes: Array<RouteType>) => {
                 method: req.method! as HttpMethod,
                 url: req.url!,
                 headers: req.headers,
-                pathParameters,
+                pathParams: pathParameters,
+                searchParams: url.searchParams,
                 body: body ? JSON.parse(body) : undefined,
             };
 
             const result = route.handler(request, pathParameters);
             if (isPromise(result)) {
                 const promiseResult = await result;
-                console.dir(promiseResult, { deapth: null, colors: true });
+
                 return promiseResult;
             } else {
                 return result;
             }
         }
+
+        return notFoundHandler();
     };
 };
