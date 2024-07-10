@@ -1,4 +1,4 @@
-import { LoggerAttributeType } from '../types';
+import { LoggerAttributeType } from '../../domain/types';
 
 export default interface Logger {
     info({ className, method, execTime, message, object }: LoggerAttributeType): void;

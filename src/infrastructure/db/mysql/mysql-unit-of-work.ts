@@ -2,7 +2,7 @@ import { Connection, PoolConnection } from 'mysql2/promise';
 import UnitOfWork from '../unit-of-work';
 import { SessionError } from '../../../domain/errors';
 import { HTTP_STATUS } from '../../../domain/constants';
-import Logger from '../../../domain/logger';
+import Logger from '../../logger/logger';
 
 export default abstract class MysqlUnitOfWork implements UnitOfWork {
     protected _poolConnection?: PoolConnection | Connection | undefined;

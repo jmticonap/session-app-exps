@@ -2,10 +2,10 @@ import { inject, singleton } from 'tsyringe';
 import mysql, { PoolConnection, RowDataPacket, PoolOptions } from 'mysql2/promise';
 import ConectionManager from '../conection-manager';
 import EnvConfigurationRepository from '../../repository/env-configuration.repository';
-import Logger from '../../../domain/logger';
+import Logger from '../../logger/logger';
 import ConfigurationRepository from '../../../domain/repository/configuration.repository';
 import { MysqlConfiguration } from '../../../domain/types';
-import ConsoleLogger from '../../logger/console.logger';
+import ConsoleLogger from '../../logger/console/console.logger';
 import MysqlUnitOfWork from './mysql-unit-of-work';
 
 interface ConnectionMysql extends RowDataPacket {
@@ -43,6 +43,8 @@ export default class MysqlPoolConectionManager extends MysqlUnitOfWork implement
                 database: this.cnf.database,
                 connectTimeout: 10_000,
                 connectionLimit: 10,
+                dateStrings: true,
+                multipleStatements: true,
             };
             this._logger.info({ className, method, object: config || cnnOpt, message: 'Connection pool data' });
             this._poolConnection = await mysql.createPool(config || cnnOpt).getConnection();

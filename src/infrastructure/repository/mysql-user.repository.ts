@@ -1,8 +1,8 @@
 import { inject, singleton } from 'tsyringe';
 import UserEntity, { UserEntityPacket } from '../../domain/entity/user.entity';
 import UserRepository from '../../domain/repository/user.repository';
-import ConsoleLogger from '../logger/console.logger';
-import Logger from '../../domain/logger';
+import ConsoleLogger from '../logger/console/console.logger';
+import Logger from '../logger/logger';
 import MysqlCrudOperations from '../db/mysql/mysql-crud-operations';
 import MysqlExecutor from '../db/mysql/mysql-executor';
 

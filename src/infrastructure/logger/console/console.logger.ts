@@ -1,6 +1,6 @@
 import { singleton } from 'tsyringe';
-import Logger from '../../domain/logger';
-import { LoggerAttributeType } from '../../domain/types';
+import Logger from '../logger';
+import { LoggerAttributeType } from '../../../domain/types';
 
 @singleton()
 export default class ConsoleLogger implements Logger {

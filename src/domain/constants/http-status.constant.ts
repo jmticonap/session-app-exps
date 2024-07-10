@@ -1,4 +1,4 @@
-import { HttpStatusCodeKey } from '../types';
+import { HttpStatusCodeKey } from '../types/http';
 
 export const HttpStatusCode: Record<HttpStatusCodeKey, number> = {
     CONTINUE: 100,
