@@ -1,8 +1,9 @@
 import { RequestOptions as ReqOptionsHttps, request as ReqHttps } from 'node:https';
 import { RequestOptions as ReqOptionsHttp, request as ReqHttp, IncomingMessage, ClientRequest } from 'node:http';
 import { SessionError } from '../../domain/errors';
-import { HttpMethod, InHttpHeaders, ProtocolType, RequestOptions, ResponseClient } from './types';
+import { InHttpHeaders, ProtocolType, RequestOptions, ResponseClient } from './types';
 import { HTTP_STATUS } from '../../domain/constants';
+import { HttpMethod } from '../../domain/types/route';
 
 export default class HttpClient {
     async post<RESULT = any, BODY = any>(fullUrl: string, req: RequestOptions<BODY>): Promise<ResponseClient<RESULT>> {
@@ -64,9 +65,10 @@ export default class HttpClient {
         const request = req.protocol === <ProtocolType>'https:' ? ReqHttps : ReqHttp;
 
         const result = new Promise<ResponseClient<RESULT>>((resolve, reject) => {
+            let inReq: ClientRequest | undefined;
             try {
                 const opt = senderOptions[req.protocol!];
-                const inReq: ClientRequest = request(opt, (res: IncomingMessage) => {
+                inReq = request(opt, (res: IncomingMessage) => {
                     let backData = '';
 
                     res.setEncoding('utf8');
@@ -93,9 +95,10 @@ export default class HttpClient {
                     reject(new SessionError('Timeout error', HTTP_STATUS['REQUEST_TIME_OUT'], 'ERROR'));
                 });
                 if (req.body) inReq.write(typeof req.body === 'string' ? req.body : JSON.stringify(req.body));
-                inReq.end();
             } catch (error) {
                 reject(error);
+            } finally {
+                inReq?.end();
             }
         });
 

@@ -1,6 +1,7 @@
 import { inject, singleton } from 'tsyringe';
 import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import MysqlPoolConectionManager from './mysql-pool-conection-manager';
+import ConectionManager from '../conection-manager';
 import BaseEntity from '../../../domain/entity/base.entity';
 import Logger from '../../../domain/logger';
 import ConsoleLogger from '../../logger/console.logger';
@@ -23,7 +24,7 @@ type InsertAttributes<T> = {
 export default class MysqlExecutor {
     constructor(
         @inject(ConsoleLogger) private _logger: Logger,
-        @inject(MysqlPoolConectionManager) private _poolManager: MysqlPoolConectionManager,
+        @inject(MysqlPoolConectionManager) private _poolManager: ConectionManager,
     ) {}
 
     async query<E extends BaseEntity, T extends E & RowDataPacket>({
@@ -34,6 +35,7 @@ export default class MysqlExecutor {
     }: QueryAttributes): Promise<E[]> {
         try {
             const conn = await this._poolManager.getConnection();
+
             this._logger.info({ className, method, object: { sql, params } });
 
             const [result] = await conn.query<T[]>(sql, params);
@@ -41,6 +43,7 @@ export default class MysqlExecutor {
             return <E[]>(<unknown>result);
         } catch (error) {
             this._logger.error({ className, method, error: <Error>error });
+
             throw error;
         }
     }
@@ -48,6 +51,7 @@ export default class MysqlExecutor {
     async insert<E extends BaseEntity>({ tableName, data, className, method }: InsertAttributes<E>): Promise<E> {
         try {
             const conn = await this._poolManager.getConnection();
+
             this._logger.info({ className, method, object: { data } });
 
             let sql = `INSERT INTO ${tableName} `;
@@ -64,6 +68,7 @@ export default class MysqlExecutor {
             return data;
         } catch (error) {
             this._logger.error({ className, method, error: <Error>error });
+
             throw error;
         }
     }
@@ -71,6 +76,7 @@ export default class MysqlExecutor {
     async update<E extends BaseEntity>({ tableName, data, className, method }: InsertAttributes<E>): Promise<E> {
         try {
             const conn = await this._poolManager.getConnection();
+
             this._logger.info({ className, method, object: { data } });
 
             let sql = `UPDATE ${tableName} SET `;
@@ -82,6 +88,7 @@ export default class MysqlExecutor {
             return data;
         } catch (error) {
             this._logger.error({ className, method, error: <Error>error });
+
             throw error;
         }
     }

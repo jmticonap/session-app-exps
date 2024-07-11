@@ -19,25 +19,25 @@ describe('HttpClient test suite', () => {
         sut = new HttpClient();
     });
 
-    describe('body', () => {
-        it('should return some string', async () => {
+    describe('GET correct request', () => {
+        it('should return some string in the BODY', async () => {
             const actual = await fetchData();
 
             expect(actual.body).toEqual(expect.any(String));
         });
-    });
 
-    describe('statusCode', () => {
-        it('should return 200', async () => {
+        it('should return 200 as STATUS_CODE', async () => {
             const actual = await fetchData();
 
             expect(actual.statusCode).toBe(HTTP_STATUS['OK']);
         });
     });
 
-    describe('timeout', () => {
-        it('should return timeout error', async () => {
-            await expect(fetchData(1)).rejects.toThrow('Timeout error');
+    describe('ANY method TIMEOUT error', () => {
+        it('should return timeout error with 1ms of timeout param', async () => {
+            const timeout = 1;
+
+            await expect(fetchData(timeout)).rejects.toThrow('Timeout error');
         });
     });
 });

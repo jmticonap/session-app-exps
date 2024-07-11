@@ -53,6 +53,7 @@ export default class MysqlPoolConectionManager implements ConectionManager {
             return this._poolConnection;
         } catch (error) {
             this._logger.error({ className, method, message: 'Error open connection pool', error: <Error>error });
+
             throw error;
         }
     }

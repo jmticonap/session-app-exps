@@ -6,6 +6,8 @@ import Logger from '../../../domain/logger';
 import ConfigurationRepository from '../../../domain/repository/configuration.repository';
 import { MysqlConfiguration } from '../../../domain/types';
 import ConsoleLogger from '../../logger/console.logger';
+import { SessionError } from '../../../domain/errors';
+import { HTTP_STATUS } from '../../../domain/constants';
 
 interface ConnectionMysql extends RowDataPacket {
     backendid: number;
@@ -52,7 +54,11 @@ export default class MysqlConectionManager implements ConectionManager {
             return this._connection;
         } catch (error) {
             this._logger.error({ className, method, error: <Error>error });
-            throw error;
+            const err = error as SessionError;
+            err.level = 'ERROR';
+            err.statusCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
+
+            throw err;
         }
     }
 }

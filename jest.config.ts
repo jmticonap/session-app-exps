@@ -4,8 +4,8 @@
  */
 import type { Config } from 'jest';
 
-const baseDir = '<rootDir>';
-const baseTestDir = '<rootDir>/tests';
+const baseDir = '<rootDir>/src/infrastructure/http';
+const baseTestDir = '<rootDir>/tests/unit';
 
 const config: Config = {
     preset: 'ts-jest',
