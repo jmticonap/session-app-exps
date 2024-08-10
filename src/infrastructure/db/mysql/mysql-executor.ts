@@ -5,6 +5,7 @@ import ConectionManager from '../conection-manager';
 import BaseEntity from '../../../domain/entity/base.entity';
 import Logger from '../../logger/logger';
 import ConsoleLogger from '../../logger/console/console.logger';
+import { SessionError } from '../../../domain/errors';
 
 type QueryAttributes = {
     sql: string;
@@ -15,7 +16,7 @@ type QueryAttributes = {
 
 type InsertAttributes<T> = {
     tableName: string;
-    data: T;
+    data: T | T[];
     className: string;
     method: string;
 };
@@ -68,22 +69,28 @@ export default class MysqlExecutor {
         }
     }
 
-    async insert<E extends BaseEntity>({ tableName, data, className, method }: InsertAttributes<E>): Promise<E> {
+    async insert<E extends BaseEntity>({ tableName, data, className, method }: InsertAttributes<E>): Promise<E | E[]> {
         try {
             const conn = await this._poolManager.getConnection();
 
             this._logger.info({ className, method, object: { data } });
 
             let sql = `INSERT INTO ${tableName} `;
-            sql += `(${this.makeFieldList(data)}) `;
-            sql += `VALUES (${this.makeQuestionMarkParam(data)});`;
+            sql += `(${this.makeFieldList(Array.isArray(data) ? data[0] : data)}) `;
+            sql += `VALUES ${this.makeQuestionMarkParam(data)};`;
 
             const params = this.makeParamsArray(data);
 
             this._logger.info({ object: { sql, params }, message: 'SQL' });
 
-            const [{ insertId }] = await conn.query<ResultSetHeader>(sql, params);
-            data.id = insertId;
+            const [{ insertId, affectedRows }] = await conn.query<ResultSetHeader>(sql, params);
+            if (Array.isArray(data)) {
+                for (let i = 0; i < affectedRows; i++) {
+                    data[i].id = insertId + i;
+                }
+            } else {
+                data.id = insertId;
+            }
 
             return data;
         } catch (error) {
@@ -95,6 +102,7 @@ export default class MysqlExecutor {
 
     async update<E extends BaseEntity>({ tableName, data, className, method }: InsertAttributes<E>): Promise<E> {
         try {
+            if (Array.isArray(data)) throw new SessionError('Data can not be array');
             const conn = await this._poolManager.getConnection();
 
             this._logger.info({ className, method, object: { data } });
@@ -119,10 +127,24 @@ export default class MysqlExecutor {
             .join(', ');
     }
 
-    private makeQuestionMarkParam<T>(data: T): string {
-        return Object.keys(data as object)
-            .map<string>(() => '?')
-            .join(', ');
+    private makeQuestionMarkParam(data: any): string {
+        if (Array.isArray(data)) {
+            const result: string[] = [];
+            for (const s of data) {
+                const row = Object.keys(s as object)
+                    .map<string>(() => '?')
+                    .join(', ');
+                result.push(`(${row})`);
+            }
+
+            return result.join(', ');
+        } else {
+            const result = Object.keys(data as object)
+                .map<string>(() => '?')
+                .join(', ');
+
+            return `(${result})`;
+        }
     }
 
     private makeKeyValueList<T>(data: T): string {
@@ -132,6 +154,10 @@ export default class MysqlExecutor {
     }
 
     private makeParamsArray<T>(data: T): any[] {
-        return Object.entries(data as object).map<any>(([, value]) => value);
+        if (Array.isArray(data)) {
+            return data.map((obj) => Object.values(obj as object)).flat();
+        } else {
+            return Object.values(data as object);
+        }
     }
 }
