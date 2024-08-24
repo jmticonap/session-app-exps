@@ -62,7 +62,7 @@ export default abstract class MysqlCrudOperations<E extends BaseEntity, P extend
     async insert(entity: E): Promise<E> {
         const method = this.insert.name;
         try {
-            return await this._executor.insert({
+            return <E>await this._executor.insert<E>({
                 tableName: this.tableName,
                 data: entity,
                 className: this.className,

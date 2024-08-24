@@ -17,10 +17,16 @@ export type ServerConfiguration = {
     port: number;
 };
 
+export type JwtConfiguration = {
+    secretKey: string | undefined;
+    expiredToken: string;
+};
+
 export type Configuration = {
     nodeEnv: NodeEnvType;
     server: EnvConfiguration<ServerConfiguration>;
     mysql: EnvConfiguration<MysqlConfiguration>;
+    jwt: JwtConfiguration;
 };
 
 // LOGGER TYPES

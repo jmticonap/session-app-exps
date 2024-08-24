@@ -1,4 +1,5 @@
 import { inject, singleton } from 'tsyringe';
+import jwt from 'jsonwebtoken';
 import { HttpRequest, HttpResponse } from '../../domain/types/route';
 import MysqlUserRepository from '../../infrastructure/repository/mysql-user.repository';
 import UserRepository from '../../domain/repository/user.repository';
@@ -8,9 +9,13 @@ import { UserRequestDtoSchema } from '../../domain/dto/user-request.dto';
 import ConsoleLogger from '../../infrastructure/logger/console/console.logger';
 import { HTTP_STATUS } from '../../domain/constants';
 import { BadRequestError, SchemaValidationError } from '../../domain/errors';
-import MysqlUserService from '../services/mysql-user.service';
 import Logger from '../../infrastructure/logger/logger';
 import { PaginationParams } from '../../domain/types';
+import { LoginUserRequestDtoSchema, LoginUserRequestDtoType } from '../../domain/dto/login-user-request.dto';
+import { NewUserRequestDtoSchema, NewUserRequestDtoType } from '../../domain/dto/new-user-request.dto';
+import SecretKeyError from '../../domain/errors/secret-key.error';
+import ConfigurationRepository from '../../domain/repository/configuration.repository';
+import EnvConfigurationRepository from '../../infrastructure/repository/env-configuration.repository';
 
 const className = 'UserController';
 
@@ -19,7 +24,8 @@ export default class UserController {
     constructor(
         @inject(ConsoleLogger) private _logger: Logger,
         @inject(MysqlUserRepository) private _userRepository: UserRepository,
-        @inject(MysqlUserService) private _userService: MysqlUserService,
+        @inject(EnvConfigurationRepository)
+        private _configurationRepository: ConfigurationRepository,
     ) {}
 
     async greeting(req: HttpRequest): Promise<HttpResponse> {
@@ -32,25 +38,6 @@ export default class UserController {
         } catch (error) {
             this._logger.info({ className, method, error: <Error>error });
             throw error;
-        }
-    }
-
-    async testTransaction(): Promise<HttpResponse> {
-        try {
-            return {
-                statusCode: HTTP_STATUS['OK'],
-                body: await this._userService.saveUserSaveTrasactionPointTest(),
-            };
-        } catch (error) {
-            this._logger.error({ className, method: 'testTransaction', error: <Error>error });
-            if (error instanceof BadRequestError || error instanceof SchemaValidationError) {
-                return error.errorResponse();
-            }
-
-            return {
-                statusCode: HTTP_STATUS['INTERNAL_SERVER_ERROR'],
-                body: error,
-            };
         }
     }
 
@@ -128,6 +115,61 @@ export default class UserController {
             return {
                 statusCode: HTTP_STATUS['NOT_FOUND'],
                 body: JSON.stringify(error),
+            };
+        }
+    }
+
+    @validationSchemaBody(NewUserRequestDtoSchema)
+    async register(req: HttpRequest<NewUserRequestDtoType>): Promise<HttpResponse> {
+        const method = this.register.name;
+        try {
+            if (!req.body) throw new BadRequestError();
+            const userDto = req.body;
+            const result = await this._userRepository.register(userDto);
+
+            return {
+                statusCode: HTTP_STATUS.CREATED,
+                body: result,
+            };
+        } catch (error) {
+            this._logger.error({ className, method, error: <Error>error });
+            if (error instanceof BadRequestError || error instanceof SchemaValidationError) {
+                return error.errorResponse();
+            }
+
+            return {
+                statusCode: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+                body: JSON.stringify(error),
+            };
+        }
+    }
+
+    @validationSchemaBody(LoginUserRequestDtoSchema)
+    async login(req: HttpRequest<LoginUserRequestDtoType>): Promise<HttpResponse> {
+        const method = this.login.name;
+        try {
+            if (!req.body) throw new BadRequestError();
+            const userDto = req.body;
+            const cnf = this._configurationRepository.get();
+
+            if (!cnf.jwt.secretKey) throw new SecretKeyError();
+
+            const token = jwt.sign(userDto, cnf.jwt.secretKey, { expiresIn: cnf.jwt.expiredToken });
+
+            return {
+                statusCode: HTTP_STATUS.OK,
+                body: { token },
+            };
+        } catch (e) {
+            this._logger.error({ className, method, error: <Error>e });
+
+            if (e instanceof BadRequestError || e instanceof SchemaValidationError || e instanceof SecretKeyError) {
+                return e.errorResponse();
+            }
+
+            return {
+                statusCode: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+                body: JSON.stringify(e),
             };
         }
     }

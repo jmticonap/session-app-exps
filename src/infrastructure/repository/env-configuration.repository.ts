@@ -43,6 +43,10 @@ export default class EnvConfigurationRepository implements ConfigurationReposito
                     database: env.MYSQL_TEST_DATABASE || 'database',
                 },
             },
+            jwt: {
+                secretKey: env.SECRET_JWT_KEY || undefined,
+                expiredToken: env.EXPIRED_JWT_TOKEN || '1h',
+            },
         };
         this._logger.info({ className, object: this._config, message: 'EnvConfiguration created successfully' });
     }
