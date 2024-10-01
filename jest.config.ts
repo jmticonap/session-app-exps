@@ -5,7 +5,7 @@
 import type { Config } from 'jest';
 
 const baseDir = '<rootDir>/src/infrastructure/http';
-const baseTestDir = '<rootDir>/tests/unit';
+const baseTestDir = '<rootDir>/tests';
 
 const config: Config = {
     preset: 'ts-jest',
